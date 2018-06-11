@@ -30,12 +30,15 @@ public class ExampleServers {
     public static void bind(int port, Function<String, String> lambda) {
         try {
             HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-            server.createContext(
-                    "/json",
-                    new Handler(
-                            "{\"name\":\"%s\", \"timestamp\":\"%s\"}",
-                            "application/json",
-                            lambda));
+            Handler jsonHandler = new Handler(
+                    "{\"name\":\"%s\", \"timestamp\":\"%s\"}",
+                    "application/json",
+                    lambda);
+            server.createContext("/json", jsonHandler);
+            server.createContext("/candidate/json", jsonHandler);
+            server.createContext("/primary/json", jsonHandler);
+            server.createContext("/secondary/json", jsonHandler);
+
             server.createContext(
                     "/html",
                     new Handler(

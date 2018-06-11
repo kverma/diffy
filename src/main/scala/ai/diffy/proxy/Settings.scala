@@ -27,4 +27,4 @@ case class Settings(
   skipEmailsWhenNoErrors: Boolean,
   httpsPort: String)
 
-case class Target(path: String)
+case class Target(path: String, uriPrefix: String)

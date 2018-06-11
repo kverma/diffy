@@ -33,8 +33,23 @@ trait HttpDifferenceProxy extends DifferenceProxy {
   override type Rep = Response
   override type Srv = HttpService
 
-  override def serviceFactory(serverset: String, label: String) =
-    HttpService(Http.newClient(serverset, label).toService)
+  override def serviceFactory(serverset: String, label: String, uriPrefix: String) = {
+    val addPrefixToUriFilter =
+      new Filter[Request, Response, Request, Response] {
+        override def apply(request: Request, service: Service[Request, Response]): Future[Response] = {
+          if (uriPrefix != null && !uriPrefix.isEmpty) {
+            val prefixedRequest = Request(request.version, request.method, "/" + uriPrefix + request.uri)
+            prefixedRequest.params ++ request.params
+            service(prefixedRequest)
+          }
+          else {
+            service(request)
+          }
+        }
+      }
+
+    HttpService(addPrefixToUriFilter andThen Http.newClient(serverset, label).toService)
+  }
 
   override lazy val server =
     Http.serve(
@@ -105,10 +120,22 @@ case class SimpleHttpsDifferenceProxy (
       (!settings.allowHttpSideEffects, httpSideEffectsFilter) andThen
       super.proxy
 
-  override def serviceFactory(serverset: String, label: String) =
-    HttpService(
-      Http.client
-      .withTls(serverset)
-      .newService(serverset+":"+settings.httpsPort, label)
-    )
+  override def serviceFactory(serverset: String, label: String, uriPrefix: String) = {
+    val addPrefixToUriFilter =
+      new Filter[Request, Response, Request, Response] {
+        override def apply(request: Request, service: Service[Request, Response]): Future[Response] = {
+          if (uriPrefix != null && !uriPrefix.isEmpty) {
+            val prefixedRequest = Request(request.version, request.method, "/" + uriPrefix + request.uri)
+            prefixedRequest.params ++ request.params
+            service(prefixedRequest)
+          }
+          else {
+            service(request)
+          }
+        }
+      }
+
+    HttpService(addPrefixToUriFilter andThen
+                Http.client.withTls(serverset).newService(serverset + ":" + settings.httpsPort, label))
+  }
 }

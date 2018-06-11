@@ -20,11 +20,20 @@ object DiffyServiceModule extends TwitterModule {
   val candidatePath =
     flag[String]("candidate", "candidate serverset where code that needs testing is deployed")
 
+  val candidateUriPrefix =
+    flag[String]("candidate.uriPrefix", "","candidate master serverset URI Prefix which is added to all requests")
+
   val primaryPath =
     flag[String]("master.primary", "primary master serverset where known good code is deployed")
 
+  val primaryUriPrefix =
+    flag[String]("primary.uriPrefix","", "primary master serverset URI Prefix which is added to all requests")
+
   val secondaryPath =
     flag[String]("master.secondary", "secondary master serverset where known good code is deployed")
+
+  val secondaryUriPrefix =
+    flag[String]("secondary.uriPrefix","", "secondary master serverset URI Prefix which is added to all requests")
 
   val protocol =
     flag[String]("service.protocol", "Service protocol: thrift, http or https")
@@ -80,9 +89,9 @@ object DiffyServiceModule extends TwitterModule {
     Settings(
       datacenter(),
       servicePort(),
-      Target(candidatePath()),
-      Target(primaryPath()),
-      Target(secondaryPath()),
+      Target(candidatePath(), candidateUriPrefix()),
+      Target(primaryPath(), primaryUriPrefix()),
+      Target(secondaryPath(), secondaryUriPrefix()),
       protocol(),
       clientId(),
       pathToThriftJar(),
